@@ -19,6 +19,15 @@ const useUsersClient = () => {
         return data[0]
     }
 
+    const findUserHome = async (value) => {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('name', value)
+        if (error) throw error
+        return data[0]
+    }
+
     const createOne = async (value) => {
         const { data, error } = await supabase
             .from('users')
@@ -57,7 +66,8 @@ const useUsersClient = () => {
         findOne,
         createOne,
         update,
-        destroy
+        destroy,
+        findUserHome
     }
 
 }

@@ -11,6 +11,7 @@ import SearchPage from '../screens/SearchPage';
 import FavoritesPage from '../screens/FavoritesPage';
 import SchoolPage from '../screens/SchoolPage';
 import AirLinePage from '../screens/AirlinePage';
+import UserPage from '../screens/UserHomePage';
 import { userContext } from '../context/userContext';
 
 const Stack = createNativeStackNavigator()
@@ -29,6 +30,7 @@ export default function AppNavigation() {
           <Stack.Screen name="Search" options={{ headerShown: false }} component={SearchPage} />
           <Stack.Screen name="School" options={{ headerShown: false }} component={SchoolPage} />
           <Stack.Screen name="Airline" options={{ headerShown: false }} component={AirLinePage} />
+          <Stack.Screen name="UserPageHome" options={{ headerShown: false }} component={UserPage} />
         </Stack.Navigator>
       </NavigationContainer>
     )

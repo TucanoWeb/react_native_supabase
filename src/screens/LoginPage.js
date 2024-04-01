@@ -7,13 +7,17 @@ import useAuth from '../components/auth/login';
 
 
 export default function LoginPage() {
-  const navigation = useNavigation();
 
+  // hooks
+  const navigation = useNavigation();
+  const { auth } = useAuth()
+
+  // states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { auth } = useAuth()
 
+  // functions
   const handleLogin = async () => {
     if (email && password) {
       try {

@@ -34,7 +34,7 @@ const EditProfilePage = () => {
     const [airLines, setAirLines] = useState([])
     const [schools, setSchools] = useState([])
 
-
+    // functions
     useEffect(() => {
         async function getUser() {
             await findOne(userID.id)
@@ -73,7 +73,6 @@ const EditProfilePage = () => {
     }, [userID]);
 
 
-    // functions
     const saveProfile = async () => {
         await update(dataForm)
             .then(() => {
@@ -150,7 +149,8 @@ const EditProfilePage = () => {
                     style={styles.input}
                     placeholder="Name"
                     value={dataForm.name}
-                    onChangeText={e => onChangeForm("name", e)}
+                    // onChangeText={e => onChangeForm("name", e)}
+                    editable={false}
                 />
 
                 <TouchableOpacity

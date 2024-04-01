@@ -85,8 +85,6 @@ export default function HomePage() {
     };
     // navigates end -------------------------
 
-
-
     return (
         <SafeAreaView style={styles.container}>
             <TouchableOpacity onPress={handleLogout} style={styles.logout}>
@@ -100,11 +98,14 @@ export default function HomePage() {
             ) : (
                 <Image source={require('../../assets/profile.png')} style={styles.userPhoto} />
             )}
-            <Text style={[styles.userName, styles.userAge]}>{userData?.name} - {userData?.age}</Text>
+            <Text style={[styles.userName, styles.userAge]}>{userData?.name} - {parseInt(userData.age) ? userData.age : "Age"}</Text>
+
             <View style={styles.separator}></View>
             <Image source={require('../../assets/flag.png')} style={styles.userCountry} />
+
             <Text style={styles.userCity}>{userData?.destination_city}</Text>
-            <Text style={styles.userArrivalDate}>Arrival Date: {userData.date_arrival}</Text>
+
+            <Text style={styles.userArrivalDate}>Arrival Date: {userData.date_arrival !== "-undefined-undefined" ? userData.date_arrival : ""}</Text>
             <View style={styles.schoolContainer}>
                 <Text style={styles.userSchool}>School: </Text>
                 <TouchableOpacity onPress={handleNavigateToSchool}>

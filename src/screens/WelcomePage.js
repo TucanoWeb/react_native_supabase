@@ -5,8 +5,9 @@ import { useNavigation } from '@react-navigation/native'
 
 export default function WelcomePage() {
 
+  // hooks
   const navigation = useNavigation();
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Let's Get Started!</Text>

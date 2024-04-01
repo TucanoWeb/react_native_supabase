@@ -7,19 +7,21 @@ import useUsersClient from '../services/supabaseStore/users/userStore';
 
 
 export default function RegisterPage() {
-  const navigation = useNavigation();
 
+  // hooks
+  const navigation = useNavigation();
   const { createOne } = useUsersClient()
 
+  // states
   const defaulFormData = {
     name: "",
     email: "",
     password: ""
   }
-
   const [formData, setFormData] = useState(defaulFormData)
 
 
+  // functions
   function onChangeForm(key, value) {
     console.log(formData)
     setFormData(prev => ({

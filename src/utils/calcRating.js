@@ -11,7 +11,7 @@ const calcRating = (value) => {
         result = arr.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / arr.length
     }
 
-    return result
+    return result.toFixed(2)
 }
 
 export default calcRating

@@ -1,47 +1,110 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, TextInput, Image, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import useUsersClient from '../services/supabaseStore/users/userStore';
+import useAirlinesClient from '../services/supabaseStore/airlines/airLinesStore';
+import useSchoolsClient from '../services/supabaseStore/schools/schoolsStore';
+import { userContext } from '../context/userContext';
 
 const SearchPage = ({ navigation }) => {
+
+    // states
     const [searchText, setSearchText] = useState('');
-    const [filterType, setFilterType] = useState([])
-    const [searchResults, setSearchResults] = useState([]);
+    const [filterType, setFilterType] = useState("users")
     const [filter, setFilter] = useState([])
 
+    const [data, setData] = useState([])
 
-    const handleSearch = async () => {
-        if (searchText.trim() === '') {
-            setSearchResults([]);
-            return;
+    // hooks
+    const { findAll } = useUsersClient()
+    const { findAirLines } = useAirlinesClient()
+    const { findSchools } = useSchoolsClient()
+    const user = useContext(userContext)
+
+    // functions
+    useEffect(() => {
+        async function getData() {
+            switch (filterType) {
+                case "users":
+                    await findAll()
+                        .then((response) => {
+                            setData(response)
+                        })
+                    break;
+                case "schools":
+                    await findSchools()
+                        .then((response) => {
+                            setData(response)
+                        })
+                    break;
+                case "airlines":
+                    await findAirLines()
+                        .then((response) => {
+                            setData(response)
+                        })
+                    break;
+                default:
+                    break;
+            }
         }
+        getData()
+    }, [filterType, searchText])
 
+    const handleSearch = (text) => {
+        setSearchText(text)
+        const filter = text
 
         if (searchText !== "") {
-            setFilter(searchResults.filter(fil => fil.toLowerCase().includes(searchText.toLowerCase())))
-        }
-
-        try {
-            const results = []
-            setSearchResults(results);
-        } catch (error) {
-            console.error("Error searching: ", error);
+            setFilter(data.filter(fil => fil.name.toLowerCase().includes(filter.toLowerCase())))
         }
     };
 
-    const renderUserItem = ({ item }) => (
-        <TouchableOpacity onPress={() => navigation.navigate('UserHome', { userId: item.id })}>
-            <View style={styles.user}>
-                <Image
-                    source={item.Photo ? { uri: item.Photo } : require('../../assets/profile.png')}
-                    style={styles.imageStyle}
-                />
-                <View>
-                    <Text>{item.Name}</Text>
-                    {item['Origin_city'] && <Text>Origin: {item['Origin_city']}</Text>}
-                    {item['Destination_city'] && <Text>Destination: {item['Destination_city']}</Text>}
-                </View>
-            </View>
-        </TouchableOpacity>
+    const renderItems = ({ item }) => (
+        <View>
+            {filterType === "users" &&
+                <TouchableOpacity onPress={() => navigation.navigate("UserPageHome", { user_id: item.id, user_name: item.name })}>
+                    <View style={styles.user}>
+                        <Image
+                            source={item.photo ? { uri: `data:image/png;base64,${item.photo}` } : require('../../assets/profile.png')}
+                            style={styles.imageStyle}
+                        />
+                        <View>
+                            <Text>{item.name}</Text>
+                            {item.origin_city && <Text>Origin: {item.origin_city}</Text>}
+                            {item.destination_city && <Text>Destination: {item.destination_city}</Text>}
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            }
+
+            {filterType === "schools" &&
+                <TouchableOpacity onPress={() => navigation.navigate('School', { school_id: item.name, user_id: user.id })}>
+                    <View style={styles.user}>
+                        <Image
+                            source={item.logotipo ? { uri: `data:image/png;base64,${item.logotipo}` } : require('../../assets/profile.png')}
+                            style={styles.imageStyle}
+                        />
+                        <View>
+                            <Text>{item.name}</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            }
+
+            {filterType === "airlines" &&
+                <TouchableOpacity onPress={() => navigation.navigate('Airline', { airline_id: item.name, user_id: user.id })}>
+                    <View style={styles.user}>
+                        <Image
+                            source={item.logotipo ? { uri: `data:image/png;base64,${item.logotipo}` } : require('../../assets/profile.png')}
+                            style={styles.imageStyle}
+                        />
+                        <View>
+                            <Text>{item.name}</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            }
+        </View>
 
     );
 
@@ -52,12 +115,13 @@ const SearchPage = ({ navigation }) => {
                     style={styles.input}
                     placeholder="Search..."
                     value={searchText}
-                    onChangeText={setSearchText}
+                    onChangeText={text => handleSearch(text)}
                 />
-                <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+                <TouchableOpacity style={styles.searchButton}>
                     <Image source={require('../../assets/search.png')} style={styles.searchIcon} />
                 </TouchableOpacity>
             </View>
+
             <View style={styles.pickerContainer}>
                 <Picker
                     selectedValue={filterType}
@@ -69,11 +133,13 @@ const SearchPage = ({ navigation }) => {
                     <Picker.Item label="Airlines" value="airlines" />
                 </Picker>
             </View>
+
             <FlatList
-                data={searchText === "" ? searchResults : filter}
-                renderItem={renderUserItem}
+                data={searchText === "" ? data : filter}
+                renderItem={renderItems}
                 keyExtractor={(item) => item.id.toString()}
             />
+
             <Footer navigation={navigation} />
         </View>
     );

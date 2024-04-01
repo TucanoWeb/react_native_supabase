@@ -10,6 +10,15 @@ const useFavoritesClient = () => {
         return data
     }
 
+    const findByUser = async (user_id) => {
+        const { data, error } = await supabase
+            .from('favorites')
+            .select('*')
+            .eq('user_id', user_id)
+        if (error) throw error
+        return data
+    }
+
     const findOneFavorite = async (school_id, user_id) => {
         const { data, error } = await supabase
             .from('favorites')
@@ -46,7 +55,8 @@ const useFavoritesClient = () => {
         findFavorites,
         findOneFavorite,
         createOneFavorite,
-        destroyFavorite
+        destroyFavorite,
+        findByUser
     }
 
 }

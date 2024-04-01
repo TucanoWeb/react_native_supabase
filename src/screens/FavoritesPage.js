@@ -1,40 +1,75 @@
-import React, { useState, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useFavoritesClient from '../services/supabaseStore/favorites/favoritesStore';
+import { userContext } from '../context/userContext';
 
 const FavoritesPage = ({ navigation }) => {
+
+  //hooks
+  const { findByUser } = useFavoritesClient()
+  const user = useContext(userContext)
+
+  // states
   const [favorites, setFavorites] = useState([]);
 
+  // functions
   useEffect(() => {
-    const loadFavorites = async () => {
-      // const storedFavoritesIds = await AsyncStorage.getItem('favorites');
-      // if (storedFavoritesIds) {
-      //   const favoritesIds = JSON.parse(storedFavoritesIds);
-      //   const favoritesData = await Promise.all(
-      //     favoritesIds.map(async (id) => {
-      //       const docRef = doc(db, "users", id);
-      //       const docSnap = await getDoc(docRef);
-      //       return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
-      //     })
-      //   );
-      //   setFavorites(favoritesData.filter(Boolean)); // Filtra qualquer valor nulo que possa ocorrer se um documento não existir
-      // }
-    };
-
-    loadFavorites();
+    async function getFavorites() {
+      await findByUser(user.id)
+        .then((response) => {
+          setFavorites(response)
+        })
+    }
+    getFavorites();
   }, []);
 
-  const renderFavoriteItem = ({ item }) => (
-    <TouchableOpacity onPress={() => navigation.navigate('UserHome', { userId: item.id })}>
-      <View style={styles.user}>
-        <Image source={require('../../assets/profile.png')} style={styles.userImage} />
-        <View>
-          <Text style={styles.userName}>{item.name}</Text>
-          <Text style={styles.userDetails}>Origem: {item.originCity}</Text>
-          <Text style={styles.userDetails}>Destino: {item.destinationCity}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+  const renderItems = ({ item }) => (
+    <View>
+      {item.name === "user" &&
+        <TouchableOpacity onPress={() => navigation.navigate("UserPageHome", { user_id: item.item_id, user_name: item.item_id })}>
+          <View style={styles.user}>
+            <Image
+              source={item.photo ? { uri: `data:image/png;base64,${item.photo}` } : require('../../assets/profile.png')}
+              style={styles.imageStyle}
+            />
+            <View>
+              <Text>{item.item_id}</Text>
+              {item.origin_city && <Text>Origin: {item.origin_city}</Text>}
+              {item.destination_city && <Text>Destination: {item.destination_city}</Text>}
+            </View>
+          </View>
+        </TouchableOpacity>
+      }
+
+      {item.name === "school" &&
+        <TouchableOpacity onPress={() => navigation.navigate('School', { school_id: item.item_id, user_id: user.id })}>
+          <View style={styles.user}>
+            <Image
+              source={item.logotipo ? { uri: `data:image/png;base64,${item.logotipo}` } : require('../../assets/profile.png')}
+              style={styles.imageStyle}
+            />
+            <View>
+              <Text>{item.item_id}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      }
+
+      {item.name === "airlines" &&
+        <TouchableOpacity onPress={() => navigation.navigate('Airline', { airline_id: item.item_id, user_id: user.id })}>
+          <View style={styles.user}>
+            <Image
+              source={item.logotipo ? { uri: `data:image/png;base64,${item.logotipo}` } : require('../../assets/profile.png')}
+              style={styles.imageStyle}
+            />
+            <View>
+              <Text>{item.item_id}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      }
+    </View>
   );
 
   return (
@@ -42,11 +77,13 @@ const FavoritesPage = ({ navigation }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>FAVORITES</Text>
       </View>
+
       <FlatList
         data={favorites}
-        renderItem={renderFavoriteItem}
+        renderItem={renderItems}
         keyExtractor={(item) => item.id}
       />
+
       <Footer navigation={navigation} />
     </View>
   );
@@ -55,7 +92,8 @@ const FavoritesPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#30FFAE', // Adjust the color to match the provided image
+    alignItems: 'center',
+    backgroundColor: '#30FFAE',
   },
   header: {
     height: 60,
@@ -72,12 +110,18 @@ const styles = StyleSheet.create({
   user: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
     padding: 10,
     width: 350,
     borderRadius: 10,
-    backgroundColor: '#30ff91',
-    left: 25,
+    backgroundColor: '#f0f0f0',
+    top: 20,
+  },
+  imageStyle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
   },
   userIcon: {
     width: 40,

@@ -20,6 +20,14 @@ const useCommentsClient = () => {
             if (error) throw error
             return data
         }
+        if (type == "users") {
+            const { data, error } = await supabase
+                .from('comments')
+                .select('*')
+                .eq('user_target', id)
+            if (error) throw error
+            return data
+        }
     }
 
     const findOneComment = async (school_id, user_id) => {
