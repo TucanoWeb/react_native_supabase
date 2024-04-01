@@ -6,21 +6,20 @@ import HomePage from '../screens/HomePage';
 import WelcomePage from '../screens/WelcomePage';
 import LoginPage from '../screens/LoginPage';
 import RegisterPage from '../screens/RegisterPage';
-import ProfilePage from '../screens/ProfilePage';
 import EditProfilePage from '../screens/EditProfilePage';
 import SearchPage from '../screens/SearchPage';
 import FavoritesPage from '../screens/FavoritesPage';
-import UserHomePage from '../screens/UserHomePage';
 import SchoolPage from '../screens/SchoolPage';
+import AirLinePage from '../screens/AirlinePage';
 import { userContext } from '../context/userContext';
 
 const Stack = createNativeStackNavigator()
 
 export default function AppNavigation() {
 
-  const user = useContext(userContext)
+  const userID = useContext(userContext)
 
-  if (user) {
+  if (userID) {
     return (
       <NavigationContainer>
         <Stack.Navigator initialRouteName='Home'>
@@ -28,8 +27,8 @@ export default function AppNavigation() {
           <Stack.Screen name="Profile" options={{ headerShown: false }} component={EditProfilePage} />
           <Stack.Screen name="Favorites" options={{ headerShown: false }} component={FavoritesPage} />
           <Stack.Screen name="Search" options={{ headerShown: false }} component={SearchPage} />
-          <Stack.Screen name="UserHome" options={{ headerShown: false }} component={UserHomePage} />
           <Stack.Screen name="School" options={{ headerShown: false }} component={SchoolPage} />
+          <Stack.Screen name="Airline" options={{ headerShown: false }} component={AirLinePage} />
         </Stack.Navigator>
       </NavigationContainer>
     )

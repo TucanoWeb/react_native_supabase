@@ -5,11 +5,11 @@ import { useState } from 'react';
 
 export default function App() {
 
-  const [user, setUser] = useState()
+  const [userID, setUserID] = useState()
 
   return (
-    <userContextProps.Provider value={[user, setUser]}>
-      <userContext.Provider value={user}>
+    <userContextProps.Provider value={[userID, setUserID]}>
+      <userContext.Provider value={userID}>
         <AppNavigation />
       </userContext.Provider>
     </userContextProps.Provider>

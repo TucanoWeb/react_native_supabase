@@ -7,46 +7,83 @@ import { ArrowLeftIcon } from 'react-native-heroicons/solid';
 import DatePicker from '@react-native-community/datetimepicker';
 
 import * as ImagePicker from 'expo-image-picker';
-import { userContext } from '../context/userContext';
+import { userContext, userContextProps } from '../context/userContext';
 
 import useUsersClient from '../services/supabaseStore/users/userStore';
+import useAirlinesClient from '../services/supabaseStore/airlines/airLinesStore';
+import useSchoolsClient from '../services/supabaseStore/schools/schoolsStore';
 
 const EditProfilePage = () => {
+
+    // hooks
     const navigation = useNavigation();
     const { update } = useUsersClient()
+    const userID = useContext(userContext)
+    const [, setUserID] = useContext(userContextProps)
+    const { findOne } = useUsersClient()
+    const { findAirLines } = useAirlinesClient()
+    const { findSchools } = useSchoolsClient()
 
-    const user = useContext(userContext)
-
+    // states
+    const [isLoading, setIsLoading] = useState(true)
     const [showSchoolPicker, setShowSchoolPicker] = useState(false);
-    const [selectedSchool, setSelectedSchool] = useState('');
+    const [showAirlinesPicker, setShowAirlinesPicker] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showDatePickerArrival, setShowDatePickerArrival] = useState(false);
-    
-    const [dataForm, setDataForm] = useState({
-        id: user.id,
-        name: user.name,
-        birthdate: user.birthdate,
-        destination_city: user.destination_city,
-        destination_country: user.destination_country,
-        date_arrival: user.date_arrival,
-        origin_city: user.origin_city,
-        origin_country: user.origin_country,
-        whatsapp: user.whatsapp,
-        school_id: user.school_id,
-        airlines_id: user.airlines_id,
-        photo: user.photo
-    })
+    const [dataForm, setDataForm] = useState([])
+    const [airLines, setAirLines] = useState([])
+    const [schools, setSchools] = useState([])
 
+
+    useEffect(() => {
+        async function getUser() {
+            await findOne(userID.id)
+                .then((response) => {
+                    setDataForm({
+                        id: response.id,
+                        name: response.name,
+                        birthdate: response.birthdate,
+                        destination_city: response.destination_city,
+                        destination_country: response.destination_country,
+                        date_arrival: response.date_arrival,
+                        origin_city: response.origin_city,
+                        origin_country: response.origin_country,
+                        whatsapp: response.whatsapp,
+                        school_id: response.school_id,
+                        airlines_id: response.airlines_id,
+                        photo: response.photo,
+                    })
+                })
+        }
+
+        async function getAirlines() {
+            await findAirLines()
+                .then((response) => setAirLines(response))
+        }
+
+        async function getSchools() {
+            await findSchools()
+                .then((response) => setSchools(response))
+        }
+
+        getUser()
+        getAirlines()
+        getSchools()
+        setIsLoading(false)
+    }, [userID]);
+
+
+    // functions
     const saveProfile = async () => {
-
         await update(dataForm)
-            .then(() => navigation.navigate("Home"))
+            .then(() => {
+                setUserID(dataForm)
+                navigation.navigate("Home")
+            })
             .catch((err) => {
                 alert(`Error: ${err.message}`)
             })
-
-
-    };
+    }
 
     function onChangeForm(key, value) {
         setDataForm(prev => ({
@@ -70,22 +107,25 @@ const EditProfilePage = () => {
     }
 
     const handleDateChange = (event, selectedDate) => {
+        const currentDate = selectedDate || dataForm.birthdate
         setShowDatePicker(Platform.OS === 'ios');
-        onChangeForm("birthdate", selectedDate || dataForm.birthdate);
-    };
+        onChangeForm("birthdate", currentDate);
+    }
 
     const handleDateArrivalChange = (event, selectedDate) => {
+        const currentDate = selectedDate || dataForm.date_arrival
         setShowDatePickerArrival(Platform.OS === 'ios');
-        onChangeForm("date_arrival", selectedDate || dataForm.date_arrival);
+        onChangeForm("date_arrival", currentDate);
     };
 
-    useEffect(() => {
-
-    }, []);
-
     const handleSelectSchool = (schoolName) => {
-        setSelectedSchool(schoolName);
+        onChangeForm("school_id", schoolName);
         setShowSchoolPicker(false);
+    };
+
+    const handleSelectAirlines = (airLinesName) => {
+        onChangeForm("airlines_id", airLinesName);
+        setShowAirlinesPicker(false);
     };
 
     return (
@@ -99,6 +139,12 @@ const EditProfilePage = () => {
                 <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.buttonBack}>
                     <ArrowLeftIcon size="25" color="black" />
                 </TouchableOpacity>
+
+                {isLoading &&
+                    <Text>
+                        Loading data....
+                    </Text>
+                }
 
                 <TextInput
                     style={styles.input}
@@ -114,16 +160,17 @@ const EditProfilePage = () => {
 
                     <Text style={[styles.dateText, { color: dataForm.birthdate ? 'black' : '#A9A9A9' }]}
                     >
-                        {dataForm.birthdate ? dataForm.birthdate : 'Birthdate'}
+                        {dataForm.birthdate ? new Date(dataForm.birthdate).toDateString() : 'Birthdate'}
                     </Text>
                 </TouchableOpacity>
 
                 {showDatePicker && (
                     <DatePicker
-                        value={dataForm.birthdate || new Date()}
+                        value={dataForm.birthdate ? new Date(dataForm.birthdate) : new Date()}
                         mode="date"
                         display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                         onChange={handleDateChange}
+                        maximumDate={new Date()}
                     />
                 )}
 
@@ -146,13 +193,13 @@ const EditProfilePage = () => {
                     onPress={() => setShowDatePickerArrival(true)}
                 >
                     <Text style={[styles.dateText, { color: dataForm.date_arrival ? 'black' : '#A9A9A9' }]}>
-                        {dataForm.date_arrival ? dataForm.date_arrival : 'Date Arrival'}
+                        {dataForm.date_arrival ? new Date(dataForm.date_arrival).toDateString() : 'Date Arrival'}
                     </Text>
                 </TouchableOpacity>
 
                 {showDatePickerArrival && (
                     <DatePicker
-                        value={dataForm.date_arrival || new Date()}
+                        value={dataForm.date_arrival ? new Date(dataForm.date_arrival) : new Date()}
                         mode="date"
                         display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                         onChange={handleDateArrivalChange}
@@ -182,16 +229,17 @@ const EditProfilePage = () => {
                 />
 
                 <TouchableOpacity onPress={() => setShowSchoolPicker(true)} style={styles.input}>
-                    <Text style={[styles.dateText2, { color: selectedSchool ? 'black' : '#A9A9A9' }]}>
-                        {selectedSchool || "School"}
+                    <Text style={[styles.dateText2, { color: dataForm.school_id ? 'black' : '#A9A9A9' }]}>
+                        {dataForm.school_id || "School"}
                     </Text>
+
                 </TouchableOpacity>
                 <Modal
                     visible={showSchoolPicker}
                     animationType="slide"
                     onRequestClose={() => setShowSchoolPicker(false)}>
                     <FlatList
-                        data={dataForm.school}
+                        data={schools}
                         keyExtractor={item => item.id}
                         renderItem={({ item }) => (
                             <TouchableOpacity onPress={() => handleSelectSchool(item.name)}>
@@ -201,13 +249,26 @@ const EditProfilePage = () => {
                     />
                 </Modal>
 
+                <TouchableOpacity onPress={() => setShowAirlinesPicker(true)} style={styles.input}>
+                    <Text style={[styles.dateText2, { color: dataForm.airlines_id ? 'black' : '#A9A9A9' }]}>
+                        {dataForm.airlines_id || "Airlines"}
+                    </Text>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Airlines"
-                    value={dataForm.airlines}
-                    onChangeText={e => onChangeForm("airlines", e)}
-                />
+                </TouchableOpacity>
+                <Modal
+                    visible={showAirlinesPicker}
+                    animationType="slide"
+                    onRequestClose={() => setShowAirlinesPicker(false)}>
+                    <FlatList
+                        data={airLines}
+                        keyExtractor={item => item.id}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => handleSelectAirlines(item.name)}>
+                                <Text>{item.name}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </Modal>
 
                 <TouchableOpacity style={styles.uploadButton} onPress={handleChoosePhoto}>
                     <Text style={styles.uploadButtonText}>{dataForm.photo ? 'Photo Selected' : 'Upload your photo'}</Text>

@@ -4,7 +4,7 @@ import { supabase } from "../../models/supabase/client"
 
 const useAuth = () => {
 
-    const [user, setUser] = useContext(userContextProps)
+    const [userID, setUserID] = useContext(userContextProps)
 
     const validate = (user, email, password) => {
         if (email === user.email && password === user.password) return true
@@ -29,14 +29,14 @@ const useAuth = () => {
         if (user) {
             const result = validate(user, email, password)
             if (result) {
-                setUser(user)
+                setUserID(user)
                 return true
             }
         }
         return false
     }
 
-    const logout = async () => setUser(false)
+    const logout = async () => setUserID(null)
 
     return {
         auth,

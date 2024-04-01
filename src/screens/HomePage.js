@@ -7,73 +7,53 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import useAuth from '../components/auth/login';
 import { userContext } from '../context/userContext';
 
+import { useConvertDate } from '../utils/convetDate';
+import useUsersClient from '../services/supabaseStore/users/userStore';
+
 export default function HomePage() {
-    const user = useContext(userContext)
+
+    // hooks
     const { logout } = useAuth()
-    
+    const { general, age } = useConvertDate()
     const navigation = useNavigation();
-    
-    const [userData, setUserData] = useState(user);
+    const { findOne } = useUsersClient()
+    const userID = useContext(userContext)
 
-    console.log("home ", user)
+    // states
+    const [userData, setUserData] = useState({});
 
+    // functions start ----------------------------
+    useEffect(() => {
+        async function getUser() {
+            await findOne(userID.id)
+                .then((response) => {
+                    setUserData({
+                        id: response.id,
+                        name: response.name,
+                        birthdate: response.birthdate,
+                        destination_city: response.destination_city,
+                        destination_country: response.destination_country,
+                        date_arrival: general(response.date_arrival),
+                        origin_city: response.origin_city,
+                        origin_country: response.origin_country,
+                        whatsapp: response.whatsapp,
+                        school_id: response.school_id,
+                        airlines_id: response.airlines_id,
+                        photo: response.photo,
+                        age: age(response.birthdate)
+                    })
+                })
+        }
+        getUser()
+    }, [userID]);
 
     const handleLogout = async () => {
         logout()
         navigation.navigate("Login")
     }
 
-    useEffect(() => {
-        const getDataUser = async () => {
-            // const userRef = doc(db, "users", auth.currentUser.uid);
-            // const docSnap = await getDoc(userRef);
-            // if (docSnap.exists()) {
-            //     const userDoc = docSnap.data();
-            //     setUserData({
-            //         name: userDoc.Name,
-            //         age: calculateAge(userDoc.Birthdate),
-            //         city: userDoc.Destination_city,
-            //         country: userDoc.Destination_country,
-            //         arrivalDate: new Date(userDoc.Date_arrival.toDate()).toLocaleDateString(),
-            //         school: userDoc.School,
-            //         airlines: userDoc.Airlines,
-            //         originCity: userDoc.Origin_city,
-            //         originCountry: userDoc.Origin_country,
-            //         photo: userDoc.Photo,
-            //     });
-            // } else {
-            //     console.log("No such document!");
-            // }
-        };
-
-        getDataUser();
-    }, []);
-
-    function calculateAge(birthdate) {
-        const birthDate = new Date(birthdate);
-        const today = new Date();
-        let age = today.getFullYear() - user.birthdate.getFullYear();
-        const m = today.getMonth() - user.birthdate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < user.birthdate.getDate())) {
-            age--;
-        }
-        return age;
-    }
-
-    const handleEditProfile = () => {
-        navigation.navigate('Profile');
-    };
-
-    const handleNavigateToSchool = () => {
-        navigation.navigate('School');
-    };
-
-    const handleNavigateToAirline = () => {
-        navigation.navigate('Airline');
-    };
-
     const openWhatsAppChat = () => {
-        let phoneNumber = user.whatsapp;
+        let phoneNumber = userData.whatsapp;
         let message = 'Hello, I would like to chat with you on WhatsApp!';
         let url = `whatsapp://send?text=${encodeURIComponent(message)}&phone=${phoneNumber}`;
 
@@ -88,6 +68,25 @@ export default function HomePage() {
             .catch((err) => console.error('An error occurred', err));
     }
 
+    // functions end ----------------------------
+
+
+    // navigates start -------------------------
+    const handleEditProfile = () => {
+        navigation.navigate('Profile');
+    };
+
+    const handleNavigateToSchool = () => {
+        navigation.navigate('School', { school_id: userData.school_id, user_id: userData.id });
+    };
+
+    const handleNavigateToAirline = () => {
+        navigation.navigate('Airline', { airline_id: userData.airlines_id, user_id: userData.id });
+    };
+    // navigates end -------------------------
+
+
+
     return (
         <SafeAreaView style={styles.container}>
             <TouchableOpacity onPress={handleLogout} style={styles.logout}>
@@ -97,7 +96,7 @@ export default function HomePage() {
                 <Text style={styles.editButtonText}>MY PROFILE</Text>
             </TouchableOpacity>
             {userData && userData.photo ? (
-                <Image source={{ uri: userData.photo }} style={styles.userPhoto} />
+                <Image source={{ uri: `data:image/png;base64,${userData.photo}` }} style={styles.userPhoto} />
             ) : (
                 <Image source={require('../../assets/profile.png')} style={styles.userPhoto} />
             )}
@@ -105,7 +104,7 @@ export default function HomePage() {
             <View style={styles.separator}></View>
             <Image source={require('../../assets/flag.png')} style={styles.userCountry} />
             <Text style={styles.userCity}>{userData?.destination_city}</Text>
-            <Text style={styles.userArrivalDate}>Arrival Date: {userData?.date_arrival}</Text>
+            <Text style={styles.userArrivalDate}>Arrival Date: {userData.date_arrival}</Text>
             <View style={styles.schoolContainer}>
                 <Text style={styles.userSchool}>School: </Text>
                 <TouchableOpacity onPress={handleNavigateToSchool}>

@@ -16,7 +16,7 @@ const useUsersClient = () => {
             .select('*')
             .eq('id', value)
         if (error) throw error
-        return data
+        return data[0]
     }
 
     const createOne = async (value) => {

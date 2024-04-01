@@ -3,24 +3,24 @@ import { StyleSheet, View, Text, Image, TextInput, FlatList, TouchableOpacity } 
 import { FontAwesome } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import useSchoolsClient from '../services/supabaseStore/schools/schoolsStore';
 import useFavoritesClient from '../services/supabaseStore/favorites/favoritesStore';
 import useUsersClient from '../services/supabaseStore/users/userStore';
 import useCommentsClient from '../services/supabaseStore/comments/commentsStore';
 
 import calcRating from '../utils/calcRating';
+import useAirlinesClient from '../services/supabaseStore/airlines/airLinesStore';
 
-const SchoolPage = () => {
+const AirLinePage = () => {
   // hooks
   const route = useRoute()
-  const { findOneSchool } = useSchoolsClient()
+  const { findOneAirline } = useAirlinesClient()
   const { findOneFavorite, createOneFavorite, destroyFavorite } = useFavoritesClient()
   const { findOne } = useUsersClient()
   const { createOneComment, findComments } = useCommentsClient()
 
   // states
   const [liked, setLiked] = useState(false);
-  const [schoolData, setSchoolData] = useState({})
+  const [airlineData, setAirlineData] = useState({})
   const [favoriteData, setFavoriteData] = useState({})
   const [refresh, setRefresh] = useState(0)
   const [commentsForm, setCommentsForm] = useState({ rating: 1 })
@@ -28,13 +28,13 @@ const SchoolPage = () => {
 
   // functions
   useEffect(() => {
-    async function getSchool() {
-      await findOneSchool(route.params?.school_id)
+    async function getAirline() {
+      await findOneAirline(route.params?.airline_id)
         .then((response) => {
-          setSchoolData(response)
+          setAirlineData(response)
           setCommentsForm(prev => ({
             ...prev,
-            school_id: response.name
+            airline_id: response.name
           }))
         })
     }
@@ -52,7 +52,7 @@ const SchoolPage = () => {
     }
 
     async function getFavorite() {
-      await findOneFavorite(route.params?.school_id, route.params?.user_id)
+      await findOneFavorite(route.params?.airline_id, route.params?.user_id)
         .then((response) => {
           setFavoriteData(response)
           setLiked(response ? true : false)
@@ -60,14 +60,14 @@ const SchoolPage = () => {
     }
 
     async function getComments() {
-      await findComments("school", route.params?.school_id)
+      await findComments("airlines", route.params?.airline_id)
         .then((response) => {
           console.log("comments", response)
           setComments(response)
         })
     }
 
-    getSchool()
+    getAirline()
     getFavorite()
     getUser()
     getComments()
@@ -88,7 +88,7 @@ const SchoolPage = () => {
 
   const toggleLike = async () => {
     if (!liked) {
-      await createOneFavorite({ name: "school", item_id: schoolData.name, user_id: route.params?.user_id })
+      await createOneFavorite({ name: "airline", item_id: airlineData.name, user_id: route.params?.user_id })
         .then(() => setLiked(!liked))
         .catch((err) => alert(err.message))
     } else {
@@ -106,7 +106,7 @@ const SchoolPage = () => {
   }
 
   const handleComment = async () => {
-    if(commentsForm.description !== ""){
+    if (commentsForm.description !== "") {
       await createOneComment(commentsForm)
         .then(() => {
           setCommentsForm(prev => ({
@@ -125,7 +125,7 @@ const SchoolPage = () => {
   return (
     <View style={styles.container}>
 
-      <Image source={{ uri: `data:image/png;base64,${schoolData.logotipo}` }} style={styles.userImage} />
+      <Image source={{ uri: `data:image/png;base64,${airlineData.logotipo}` }} style={styles.userImage} />
 
       <View style={styles.rsr}>
         <Text style={styles.rating}>{rating > 0 ? rating : "0"}
@@ -133,7 +133,7 @@ const SchoolPage = () => {
         <Text style={styles.reviews}>{comments.length} Reviews</Text>
       </View>
 
-      <Text style={styles.schoolTitle}>{schoolData.name}</Text>
+      <Text style={styles.airlineTitle}>{airlineData.name}</Text>
 
       <TouchableOpacity style={styles.likeButton} onPress={toggleLike}>
         <Icon name="heart" size={40} color={liked ? 'red' : 'grey'} />
@@ -141,7 +141,7 @@ const SchoolPage = () => {
 
       <View style={styles.separator}></View>
 
-      <Text style={styles.location}>{schoolData.city}, {schoolData.country}</Text>
+      <Text style={styles.location}>{airlineData.city}, {airlineData.country}</Text>
 
       <View style={styles.separator2}></View>
 
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   reviews: {
     color: 'grey',
   },
-  schoolTitle: {
+  airlineTitle: {
     position: 'absolute',
     marginTop: 270,
     fontWeight: 'bold',
@@ -339,4 +339,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default SchoolPage;
+export default AirLinePage;
